@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生日祝福</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(45deg, 
+                #ff66a3, #ff66d9, #ff66ff,
+                #ff99ff, #ffccff, #ff99cc,
+                #ff66cc, #ff99dd, #ff66aa,
+                #ff3399, #ff6699, #ff3366);
+            background-size: 1200% 1200%;
+            animation: gradientAnimation 30s ease infinite;
+            overflow: hidden;
+            font-family: 'Microsoft YaHei', sans-serif;
+            position: relative;
+        }
+
+        .marquee {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 60px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #ffcc00;
+            font-size: 2rem;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+        }
+
+        .marquee-content {
+            display: inline-block;
+            padding-left: 100%;
+            animation: marqueeAnimation 15s linear infinite;
+        }
+
+        .birthday-content {
+            text-align: center;
+            z-index: 10;
+            width: 100%;
+            padding: 20px;
+            margin-top: 60px; /* 为跑马灯留出空间 */
+        }
+
+        .name {
+            font-size: 8rem;
+            color: white;
+            text-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            margin-bottom: 3rem;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        .message {
+            font-size: 6rem;
+            color: white;
+            text-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            margin-bottom: 2rem;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        .date {
+            font-size: 2rem;
+            color: #fff9c4;
+            text-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        /* 礼花特效 */
+        .firework {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes fireworkAnimation {
+            0% {
+                transform: translate(0, 0);
+                opacity: 1;
+                width: 15px;
+                height: 15px;
+            }
+            100% {
+                transform: translate(var(--x), var(--y));
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+        }
+
+        @keyframes marqueeAnimation {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .name {
+                font-size: 4rem;
+            }
+            
+            .message {
+                font-size: 3rem;
+            }
+            
+            .date {
+                font-size: 1.2rem;
+            }
+            
+            .marquee {
+                height: 40px;
+                font-size: 1.5rem;
+            }
+            
+            .birthday-content {
+                margin-top: 40px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .name {
+                font-size: 3rem;
+            }
+            
+            .message {
+                font-size: 2rem;
+            }
+            
+            .date {
+                font-size: 1rem;
+            }
+            
+            .marquee {
+                height: 30px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="marquee">
+        <div class="marquee-content">祝我宝贝生日快乐！祝我宝贝生日快乐！祝我宝贝生日快乐！祝我宝贝生日快乐！祝我宝贝生日快乐！祝我宝贝生日快乐！祝我宝贝生日快乐！</div>
+    </div>
+    
+    <div class="birthday-content">
+        <h1 class="name">郑 梦</h1>
+        <h2 class="message">生 日 快 乐</h2>
+        <p class="date">2025年8月1号</p>
+    </div>
+
+    <script>
+        function createFirework() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff9900', '#ffffff'];
+            const container = document.body;
+            const centerX = Math.random() * window.innerWidth;
+            const centerY = Math.random() * window.innerHeight;
+            
+            for (let i = 0; i < 50; i++) {
+                const firework = document.createElement('div');
+                firework.classList.add('firework');
+                
+                // 随机颜色
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                firework.style.backgroundColor = color;
+                firework.style.boxShadow = `0 0 15px 5px ${color}`;
+                
+                // 设置起始位置
+                firework.style.left = `${centerX}px`;
+                firework.style.top = `${centerY}px`;
+                
+                // 设置随机移动方向和距离
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 50 + Math.random() * 150;
+                const x = Math.cos(angle) * distance;
+                const y = Math.sin(angle) * distance;
+                
+                firework.style.setProperty('--x', `${x}px`);
+                firework.style.setProperty('--y', `${y}px`);
+                
+                // 添加动画
+                firework.style.animation = `fireworkAnimation ${0.5 + Math.random() * 1}s ease-out forwards`;
+                
+                container.appendChild(firework);
+                
+                // 动画结束后移除元素
+                setTimeout(() => {
+                    firework.remove();
+                }, 2000);
+            }
+        }
+        
+        // 提高礼花频率 - 每400毫秒创建一次礼花
+        setInterval(createFirework, 400);
+        
+        // 页面加载完成后开始创建礼花
+        window.addEventListener('load', () => {
+            setTimeout(createFirework, 500);
+        });
+    </script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>生日祝福</title>
+    <title>生日倒计时</title>
     <style>
         * {
             margin: 0;
@@ -60,7 +60,7 @@
         }
 
         .name {
-            font-size: 8rem;
+            font-size: 4rem;
             color: white;
             text-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
             margin-bottom: 3rem;
@@ -69,12 +69,43 @@
         }
 
         .message {
-            font-size: 6rem;
+            font-size: 3rem;
             color: white;
             text-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
             margin-bottom: 2rem;
             font-weight: bold;
             line-height: 1.2;
+        }
+
+        .countdown-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 2rem;
+        }
+
+        .countdown-item {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            min-width: 120px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .countdown-number {
+            font-size: 4rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        .countdown-label {
+            font-size: 1.5rem;
+            color: #fff9c4;
+            text-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+            margin-top: 10px;
         }
 
         .date {
@@ -128,11 +159,24 @@
         /* 响应式设计 */
         @media (max-width: 768px) {
             .name {
-                font-size: 4rem;
+                font-size: 2.5rem;
             }
             
             .message {
-                font-size: 3rem;
+                font-size: 2rem;
+            }
+            
+            .countdown-item {
+                min-width: 80px;
+                padding: 15px 10px;
+            }
+            
+            .countdown-number {
+                font-size: 2.5rem;
+            }
+            
+            .countdown-label {
+                font-size: 1rem;
             }
             
             .date {
@@ -151,11 +195,28 @@
         
         @media (max-width: 480px) {
             .name {
-                font-size: 3rem;
+                font-size: 2rem;
             }
             
             .message {
-                font-size: 2rem;
+                font-size: 1.5rem;
+            }
+            
+            .countdown-container {
+                gap: 10px;
+            }
+            
+            .countdown-item {
+                min-width: 60px;
+                padding: 10px 5px;
+            }
+            
+            .countdown-number {
+                font-size: 1.8rem;
+            }
+            
+            .countdown-label {
+                font-size: 0.8rem;
             }
             
             .date {
@@ -170,17 +231,74 @@
     </style>
 </head>
 <body>
-    <div class="marquee">
-        <div class="marquee-content">祝我宝贝生日快乐！祝我宝贝生日快乐！祝我宝贝生日快乐！祝我宝贝生日快乐！祝我宝贝生日快乐！祝我宝贝生日快乐！祝我宝贝生日快乐！</div>
-    </div>
+    <!-- 跑马灯 -->
+    <!-- <div class="marquee">
+        <div class="marquee-content">距离8月1日生日还有多少时间呢？</div>
+    </div> -->
     
     <div class="birthday-content">
-        <h1 class="name">郑 梦</h1>
-        <h2 class="message">生 日 快 乐</h2>
-        <p class="date">2025年8月1号</p>
+        <h1 class="name">生日倒计时</h1>
+        <h2 class="message">距离我宝贝生日还有：</h2>
+        
+        <div class="countdown-container">
+            <div class="countdown-item">
+                <div class="countdown-number" id="days">00</div>
+                <div class="countdown-label">天</div>
+            </div>
+            <div class="countdown-item">
+                <div class="countdown-number" id="hours">00</div>
+                <div class="countdown-label">时</div>
+            </div>
+            <div class="countdown-item">
+                <div class="countdown-number" id="minutes">00</div>
+                <div class="countdown-label">分</div>
+            </div>
+            <div class="countdown-item">
+                <div class="countdown-number" id="seconds">00</div>
+                <div class="countdown-label">秒</div>
+            </div>
+        </div>
+        
+        <p class="date" id="current-date"></p>
     </div>
 
     <script>
+        function updateCountdown() {
+            const now = new Date();
+            let targetDate = new Date(now.getFullYear(), 7, 1); // 8月1日 (月份从0开始，所以7代表8月)
+            
+            // 如果今年的8月1日已经过了，则计算到明年的8月1日
+            if (now > targetDate) {
+                targetDate = new Date(now.getFullYear() + 1, 7, 1);
+            }
+            
+            // 显示当前日期
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            document.getElementById('current-date').textContent = 
+                '今天是: ' + now.toLocaleDateString('zh-CN', options);
+            
+            // 计算时间差
+            const diff = targetDate - now;
+            
+            // 计算天、小时、分钟、秒
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            // 更新显示
+            document.getElementById('days').textContent = days.toString().padStart(2, '0');
+            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+        }
+        
+        // 每秒更新一次倒计时
+        setInterval(updateCountdown, 1000);
+        
+        // 初始化倒计时
+        updateCountdown();
+        
         function createFirework() {
             const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff9900', '#ffffff'];
             const container = document.body;
@@ -222,12 +340,12 @@
         }
         
         // 提高礼花频率 - 每400毫秒创建一次礼花
-        setInterval(createFirework, 400);
+        // setInterval(createFirework, 400);
         
         // 页面加载完成后开始创建礼花
-        window.addEventListener('load', () => {
-            setTimeout(createFirework, 500);
-        });
+        // window.addEventListener('load', () => {
+        //     setTimeout(createFirework, 500);
+        // });
     </script>
 </body>
 </html>

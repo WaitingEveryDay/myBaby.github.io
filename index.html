@@ -56,7 +56,7 @@
             z-index: 10;
             width: 100%;
             padding: 20px;
-            margin-top: 60px; /* 为跑马灯留出空间 */
+            margin-top: 60px;
         }
 
         .name {
@@ -154,6 +154,68 @@
             100% {
                 transform: translateX(-100%);
             }
+        }
+
+        /* 图片浏览样式 */
+        .image-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+        }
+
+        .slide-image {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .slide-image.active {
+            opacity: 1;
+        }
+
+        .image-navigation {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 15;
+            display: flex;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 20px;
+            display: none;
+        }
+
+        .nav-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+        }
+
+        .nav-dot.active {
+            background: white;
+        }
+
+        .image-counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 15;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 1rem;
+            display: none;
         }
 
         /* 响应式设计 */
@@ -262,7 +324,60 @@
         <p class="date" id="current-date"></p>
     </div>
 
+    <!-- 图片容器 -->
+    <div class="image-container" id="imageContainer"></div>
+    
+    <!-- 图片导航点 -->
+    <div class="image-navigation" id="imageNavigation"></div>
+    
+    <!-- 图片计数器 -->
+    <div class="image-counter" id="imageCounter"></div>
+
     <script>
+        // 农历日期数据（七夕节近似公历日期）
+        const LUNAR_DATES = {
+            2025: { qixi: { month: 7, day: 29 } },
+            2026: { qixi: { month: 8, day: 17 } },
+            2027: { qixi: { month: 8, day: 6 } },
+            2028: { qixi: { month: 7, day: 26 } },
+            2029: { qixi: { month: 8, day: 13 } },
+            2030: { qixi: { month: 8, day: 3 } }
+        };
+
+        // 图片文件名数组（请根据实际文件名修改）
+        const imageFiles = [
+            'image1.jpg',
+            'image2.jpg',
+            'image3.jpg',
+            'image4.jpg',
+            'image5.jpg'
+        ];
+
+        let currentImageIndex = -1; // 修改初始索引为-1，表示没有图片显示
+        let galleryInitialized = false;
+        let galleryVisible = false;
+
+        function isSpecialDay() {
+            const now = new Date();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            const year = now.getFullYear();
+            
+            // 检查是否为生日（8月1日）
+            if (month === 8 && day === 1) {
+                return { isSpecial: true, reason: "生日快乐！🎉" };
+            }
+            
+            // 检查是否为七夕节
+            if (LUNAR_DATES[year] && 
+                month === LUNAR_DATES[year].qixi.month && 
+                day === LUNAR_DATES[year].qixi.day) {
+                return { isSpecial: true, reason: "今天是七夕节！" };
+            }
+            
+            return { isSpecial: false };
+        }
+
         function updateCountdown() {
             const now = new Date();
             let targetDate = new Date(now.getFullYear(), 7, 1); // 8月1日 (月份从0开始，所以7代表8月)
@@ -272,10 +387,18 @@
                 targetDate = new Date(now.getFullYear() + 1, 7, 1);
             }
             
+            // 检查是否为特殊节日
+            const specialDay = isSpecialDay();
+            
             // 显示当前日期
             const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-            document.getElementById('current-date').textContent = 
-                '今天是: ' + now.toLocaleDateString('zh-CN', options);
+            let dateText = '今天是: ' + now.toLocaleDateString('zh-CN', options);
+            
+            if (specialDay.isSpecial) {
+                dateText += ' - ' + specialDay.reason;
+            }
+            
+            document.getElementById('current-date').textContent = dateText;
             
             // 计算时间差
             const diff = targetDate - now;
@@ -291,6 +414,12 @@
             document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
             document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
             document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+            
+            // 如果是特殊节日，启用礼花效果
+            if (specialDay.isSpecial && !window.fireworksStarted) {
+                setInterval(createFirework, 400);
+                window.fireworksStarted = true;
+            }
         }
         
         // 每秒更新一次倒计时
@@ -338,14 +467,207 @@
                 }, 2000);
             }
         }
-        
-        // 提高礼花频率 - 每400毫秒创建一次礼花
-        // setInterval(createFirework, 400);
-        
-        // 页面加载完成后开始创建礼花
-        // window.addEventListener('load', () => {
-        //     setTimeout(createFirework, 500);
-        // });
+
+        // 图片浏览功能
+        function initImageGallery() {
+            if (galleryInitialized) return;
+            
+            const container = document.getElementById('imageContainer');
+            const navigation = document.getElementById('imageNavigation');
+            
+            // 清空容器
+            container.innerHTML = '';
+            navigation.innerHTML = '';
+            
+            // 创建图片元素（从第一张图片开始，即索引0）
+            imageFiles.forEach((file, index) => {
+                const img = document.createElement('img');
+                img.src = file;
+                img.alt = `生日图片 ${index + 1}`;
+                img.classList.add('slide-image');
+                // 不设置默认激活状态
+                container.appendChild(img);
+                
+                // 创建导航点（所有图片都有导航点）
+                const dot = document.createElement('div');
+                dot.classList.add('nav-dot');
+                dot.addEventListener('click', () => showImage(index));
+                navigation.appendChild(dot);
+            });
+            
+            // 更新计数器
+            updateImageCounter();
+            galleryInitialized = true;
+        }
+
+        function showImage(index) {
+            const images = document.querySelectorAll('.slide-image');
+            const dots = document.querySelectorAll('.nav-dot');
+            
+            // 移除所有活动状态
+            images.forEach(img => img.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+            
+            // 设置当前图片为活动状态
+            images[index].classList.add('active');
+            
+            // 设置对应的导航点为活动状态
+            if (dots[index]) {
+                dots[index].classList.add('active');
+            }
+            
+            currentImageIndex = index;
+            updateImageCounter();
+        }
+
+        function updateImageCounter() {
+            const counter = document.getElementById('imageCounter');
+            // 如果没有图片显示，显示"无图片"
+            if (currentImageIndex === -1) {
+                counter.textContent = `无图片`;
+            } else {
+                counter.textContent = `${currentImageIndex + 1} / ${imageFiles.length}`;
+            }
+        }
+
+        function nextImage() {
+            if (!galleryInitialized) {
+                initImageGallery();
+            }
+            
+            // 从第一张图片开始循环
+            if (currentImageIndex < imageFiles.length - 1) {
+                currentImageIndex++;
+            } else {
+                currentImageIndex = 0; // 回到第一张图片
+            }
+            
+            showImage(currentImageIndex);
+            showGallery();
+        }
+
+        function prevImage() {
+            if (!galleryInitialized) {
+                initImageGallery();
+            }
+            
+            // 从第一张图片开始循环
+            if (currentImageIndex > 0) {
+                currentImageIndex--;
+            } else {
+                currentImageIndex = imageFiles.length - 1; // 回到最后一张图片
+            }
+            
+            showImage(currentImageIndex);
+            showGallery();
+        }
+
+        function showGallery() {
+            if (galleryVisible) return;
+            
+            const navigation = document.getElementById('imageNavigation');
+            const counter = document.getElementById('imageCounter');
+            
+            navigation.style.display = 'flex';
+            counter.style.display = 'block';
+            
+            galleryVisible = true;
+        }
+
+        // 支持鼠标手势滑动
+        let startX = 0;
+        let startY = 0;
+
+        document.addEventListener('mousedown', (e) => {
+            startX = e.clientX;
+            startY = e.clientY;
+        });
+
+        document.addEventListener('mouseup', (e) => {
+            const endX = e.clientX;
+            const endY = e.clientY;
+            const diffX = endX - startX;
+            const diffY = endY - startY;
+            
+            // 判断是否为水平滑动且滑动距离足够
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                if (diffX > 0) {
+                    // 右滑（上一张）
+                    prevImage();
+                } else {
+                    // 左滑（下一张）
+                    nextImage();
+                }
+            }
+        });
+
+        // 支持触摸滑动
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].clientX;
+            touchStartY = e.changedTouches[0].clientY;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            const diffX = touchEndX - touchStartX;
+            const diffY = touchEndY - touchStartY;
+            
+            // 判断是否为水平滑动且滑动距离足够
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                if (diffX > 0) {
+                    // 右滑（上一张）
+                    prevImage();
+                } else {
+                    // 左滑（下一张）
+                    nextImage();
+                }
+            }
+        });
+
+        // 支持鼠标滚轮
+        let scrollTimeout;
+        document.addEventListener('wheel', (e) => {
+            // 防止过于频繁的切换
+            if (scrollTimeout) return;
+            
+            scrollTimeout = setTimeout(() => {
+                scrollTimeout = null;
+            }, 50);
+            
+            // 根据滚动方向切换图片（仅当已初始化图片库时）
+            if (galleryInitialized) {
+                if (e.deltaY > 0) {
+                    // 向下滚动（下一张）
+                    nextImage();
+                } else {
+                    // 向上滚动（上一张）
+                    prevImage();
+                }
+            }
+        });
+
+        // 支持键盘操作
+        document.addEventListener('keydown', (e) => {
+            if (galleryInitialized) {
+                if (e.key === 'ArrowRight') {
+                    nextImage();
+                } else if (e.key === 'ArrowLeft') {
+                    prevImage();
+                }
+            }
+        });
+
+        // 初始化时显示计数器但不加载任何图片
+        window.addEventListener('load', () => {
+            // 显示计数器
+            const counter = document.getElementById('imageCounter');
+            counter.style.display = 'block';
+            counter.textContent = '无图片';
+        });
     </script>
 </body>
 </html>
